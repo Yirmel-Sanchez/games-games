@@ -19,6 +19,9 @@ public class WSGames extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 		this.sessions.add(session);
+		String query = session.getUri().getQuery();
+		int pos = query.indexOf("=");
+		String idMatch = query.substring(pos + 1);
 		System.out.println("Conexion ws establecida con " + session.getId());
 	}
 
