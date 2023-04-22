@@ -65,10 +65,24 @@ public class WSGames extends TextWebSocketHandler {
 			//System.out.println("Player Ready:"+jso.getString("userId")); //*****************************************
 			this.playerReady(jso);
 		} else if (type.equals("LEAVE GAME")) {
-			this.leaveGame(jso);
+			this.leaveGame(jso); 
+		} else if (type.equals("ADD NUMBERS")) {
+			this.addNumbers(jso); 
 		} else {
 			this.send(session, "type", "ERROR", "message", "Mensaje no reconocido");
 		}
+	}
+
+	private void addNumbers(JSONObject jso) {
+		String matchId = jso.getString("idMatch");
+		String nameUser = jso.getString("nameUser");
+		
+		Match match = Manager.get().getMatch(matchId);
+		
+		if (match != null) {
+			//match.addNumbers(nameUser);
+		}
+		
 	}
 
 	private void leaveGame(JSONObject jso) {

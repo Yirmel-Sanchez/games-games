@@ -15,11 +15,11 @@ import edu.uclm.esi.gamesgames.ws.Manager;
 
 public class Match {
 
-	private String id;
+	private String id; // almacenar en la bd
 	private boolean ready;
 	private boolean started;
-	private List<String> players;
-	private HashMap<String, Board> boards;
+	private List<String> players; // almacenar en la bd
+	private HashMap<String, Board> boards; // almacenar en la bd
 
 	public Match() {
 		this.id = UUID.randomUUID().toString();
@@ -76,7 +76,9 @@ public class Match {
 	public void notifyStart() {
 		for (String player : players) {
 			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
-			JSONObject jso = new JSONObject().put("type", "MATCH STARTED").put("matchId", this.id);
+			JSONObject jso = new JSONObject().put("type", "MATCH STARTED").put("matchId", this.id).put("boards",
+					boards.toString().replaceAll("=", ":"));
+
 			TextMessage message = new TextMessage(jso.toString());
 			try {
 				wsSession.sendMessage(message);
@@ -85,7 +87,7 @@ public class Match {
 			}
 		}
 	}
-	
+
 	public void notifyWinner(String winner, String looser) {
 		for (String player : players) {
 			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
@@ -102,12 +104,13 @@ public class Match {
 	public void removePlayer(String player) {
 		this.players.remove(player);
 	}
-	
+
 	public String nameOther(String player) {
-		if(players.get(0).equals(player)) {
+		if (players.get(0).equals(player)) {
 			return players.get(1);
-		}else {
+		} else {
 			return players.get(0);
 		}
 	}
+
 }
