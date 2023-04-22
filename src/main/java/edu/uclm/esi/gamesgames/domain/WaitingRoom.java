@@ -21,9 +21,18 @@ public class WaitingRoom {
 			}
 		} else {
 			match.addPlayer(player);
+			match.setReady(true);
 			this.pendingMatches.remove(juego);
 		}
 		return match;
+	}
+	
+	public void leaveMatch(String idMatch, String player) {
+		this.pendingMatches.forEach((key, value) -> {
+	        if(value.getId().equals(idMatch)) {
+	        	value.removePlayer(player);
+	        }
+	    });
 	}
 
 }

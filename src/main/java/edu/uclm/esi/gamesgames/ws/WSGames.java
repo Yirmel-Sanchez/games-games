@@ -11,6 +11,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import edu.uclm.esi.gamesgames.domain.Match;
+
 @Component
 public class WSGames extends TextWebSocketHandler {
 	private ArrayList<WebSocketSession> sessions = new ArrayList<>();
@@ -19,9 +21,32 @@ public class WSGames extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 		this.sessions.add(session);
-		String query = session.getUri().getQuery();
-		int pos = query.indexOf("=");
-		String idMatch = query.substring(pos + 1);
+		String query = session.getUri().toString();
+		query = query.substring("ws://localhost:8084/wsGames?".length());
+		System.out.println(query);
+
+		String userId = "";
+		String idMatch = "";
+
+		if (query != null) {
+			String[] params = query.split("&");
+			for (String param : params) {
+				String[] keyVal = param.split("=");
+				if (keyVal.length == 2) {
+					String key = keyVal[0];
+					String val = keyVal[1];
+					if ("nameUser".equals(key)) {
+						userId = val;
+					} else if ("idMatch".equals(key)) {
+						idMatch = val;
+					}
+				}
+			}
+		}
+		System.out.println("idMatch:" + idMatch);
+		System.out.println("nameUser:" + userId);
+		Manager.get().addSessionByUserId(userId, session);
+
 		System.out.println("Conexion ws establecida con " + session.getId());
 	}
 
@@ -36,9 +61,22 @@ public class WSGames extends TextWebSocketHandler {
 			this.chat(jso);
 		} else if (type.equals("BROADCAST")) {
 			this.broadcast(jso);
+		} else if (type.equals("PLAYER READY")) {
+			//System.out.println("Player Ready:"+jso.getString("userId")); //*****************************************
+			this.playerReady(jso);
+		} else if (type.equals("LEAVE GAME")) {
+			this.leaveGame(jso);
 		} else {
 			this.send(session, "type", "ERROR", "message", "Mensaje no reconocido");
 		}
+	}
+
+	private void leaveGame(JSONObject jso) {
+		String userId = jso.getString("nameUser");
+		String matchId = jso.getString("matchId");
+		Match match = Manager.get().getMatch(matchId);
+		String winner = match.nameOther(userId);
+		Manager.get().finishMatch(matchId, winner);
 	}
 
 	private void send(WebSocketSession session, String... tv) {
@@ -82,14 +120,23 @@ public class WSGames extends TextWebSocketHandler {
 		}
 	}
 
+	private void playerReady(JSONObject jso) {
+		String matchId = jso.getString("idMatch");
+		Match match = Manager.get().getMatch(matchId);
+		if (match != null && !match.isStarted()) {
+			match.setStarted();
+			match.notifyStart();
+		}
+	}
+
 	@Override
 	protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) {
-		
+
 	}
 
 	@Override
 	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-		
+
 	}
 
 	@Override
