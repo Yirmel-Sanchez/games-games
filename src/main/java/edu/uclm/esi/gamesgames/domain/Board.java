@@ -29,15 +29,12 @@ public class Board {
 	}
 	
 	public String toString() {
-	    String result = "[";
+	    String result = "";
 	    for (int i = 0; i < 9; i++) {
-	    	result += "[";
-	        for (int j = 0; j < 9; j++) {
-	            result += "[" + digits[i][j][0] + "," + digits[i][j][1] + "]";
+	    	for (int j = 0; j < 9; j++) {
+	            result += digits[i][j][0] + "," + digits[i][j][1] + ",";
 	        }
-	        result += "],";
 	    }
-	    result = result.substring(0, result.length() - 1);
-	    return result + "]";
+	    return result.substring(0, result.length()-1);
 	}
 }

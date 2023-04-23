@@ -76,8 +76,13 @@ public class Match {
 	public void notifyStart() {
 		for (String player : players) {
 			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
-			JSONObject jso = new JSONObject().put("type", "MATCH STARTED").put("matchId", this.id).put("boards",
-					boards.toString().replaceAll("=", ":"));
+			JSONObject jso = new JSONObject().put("type", "MATCH STARTED").put("matchId", this.id);
+			
+			JSONObject json = new JSONObject();
+	        for (String key : boards.keySet()) {
+	            json.put(key, boards.get(key));
+	        }
+			jso.put("boards", json);
 
 			TextMessage message = new TextMessage(jso.toString());
 			try {
@@ -92,6 +97,26 @@ public class Match {
 		for (String player : players) {
 			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
 			JSONObject jso = new JSONObject().put("type", "MATCH FINISHED").put("winner", winner);
+			TextMessage message = new TextMessage(jso.toString());
+			try {
+				wsSession.sendMessage(message);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void notifyMove() {
+		for (String player : players) {
+			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
+			JSONObject jso = new JSONObject().put("type", "UPDATE BOARDS");
+			
+			JSONObject json = new JSONObject();
+	        for (String key : boards.keySet()) {
+	            json.put(key, boards.get(key));
+	        }
+			jso.put("boards", json);
+			
 			TextMessage message = new TextMessage(jso.toString());
 			try {
 				wsSession.sendMessage(message);

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
@@ -12,10 +13,14 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import edu.uclm.esi.gamesgames.domain.Match;
+import edu.uclm.esi.gamesgames.services.GamesService;
 
 @Component
 public class WSGames extends TextWebSocketHandler {
 	private ArrayList<WebSocketSession> sessions = new ArrayList<>();
+	
+	@Autowired
+	private GamesService gamesService;
 
 	// Cada objeto representa el WS del cliente
 	@Override
@@ -112,7 +117,14 @@ public class WSGames extends TextWebSocketHandler {
 	}
 
 	private void move(JSONObject jso) {
-		// TODO Auto-generated method stub
+		String userId = jso.getString("nameUser");
+		String matchId = jso.getString("matchId");
+		String move = jso.getString("move");
+		Match match = Manager.get().getMatch(matchId);
+		match.notifyMove();
+		//comprobar si el movimiento es valido
+		//gamesService.isValidMove(match, userId, move);
+		System.out.println("user: "+userId+", move: "+ move);
 
 	}
 
