@@ -104,7 +104,7 @@ public class Manager {
 	
 	public void finishMatch(String idMatch, String winner) {
 		Match match = removeMatch(idMatch);
-		match.notifyWinner(idMatch, idMatch);
+		match.notifyWinner(winner);
 		removerPlayersInMatch(match);
 		//guardarDBMatch(result);
 	}

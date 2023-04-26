@@ -93,7 +93,7 @@ public class Match {
 		}
 	}
 
-	public void notifyWinner(String winner, String looser) {
+	public void notifyWinner(String winner) {
 		for (String player : players) {
 			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
 			JSONObject jso = new JSONObject().put("type", "MATCH FINISHED").put("winner", winner);
@@ -136,6 +136,10 @@ public class Match {
 		} else {
 			return players.get(0);
 		}
+	}
+	
+	public void setBoard(String player, Board board) {
+		boards.put(player, board);
 	}
 
 }

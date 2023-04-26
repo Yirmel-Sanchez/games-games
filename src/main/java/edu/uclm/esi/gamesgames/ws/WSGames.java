@@ -19,9 +19,6 @@ import edu.uclm.esi.gamesgames.services.GamesService;
 public class WSGames extends TextWebSocketHandler {
 	private ArrayList<WebSocketSession> sessions = new ArrayList<>();
 	
-	@Autowired
-	private GamesService gamesService;
-
 	// Cada objeto representa el WS del cliente
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -79,14 +76,20 @@ public class WSGames extends TextWebSocketHandler {
 	}
 
 	private void addNumbers(JSONObject jso) {
-		String matchId = jso.getString("idMatch");
+		String matchId = jso.getString("matchId");
 		String nameUser = jso.getString("nameUser");
 		
 		Match match = Manager.get().getMatch(matchId);
+		Manager.get().getGamesService().addNumber(match, nameUser); //realizar movimiento si es valido
 		
-		if (match != null) {
-			//match.addNumbers(nameUser);
+		//comprobarTableroBloqueado
+		if(Manager.get().getGamesService().checkBlock(match, nameUser)) { //tablero bloqueado
+			String winner = match.nameOther(nameUser);
+			Manager.get().finishMatch(matchId, winner); //terminar la partida
+		}else { //hay movimientos posibles
+			match.notifyMove();
 		}
+		System.out.println("add number to user: "+nameUser);
 		
 	}
 
@@ -120,10 +123,16 @@ public class WSGames extends TextWebSocketHandler {
 		String userId = jso.getString("nameUser");
 		String matchId = jso.getString("matchId");
 		String move = jso.getString("move");
+		
 		Match match = Manager.get().getMatch(matchId);
-		match.notifyMove();
-		//comprobar si el movimiento es valido
-		//gamesService.isValidMove(match, userId, move);
+		Manager.get().getGamesService().isValidMove(match, userId, move); //realizar movimiento si es valido
+		
+		if(Manager.get().getGamesService().emptyBoard(match, userId)) {//tablero vacio
+			Manager.get().finishMatch(matchId, userId); //terminar la partida
+		}else {//tablero con numeros
+			match.notifyMove();
+		}
+		//match.notifyMove();
 		System.out.println("user: "+userId+", move: "+ move);
 
 	}

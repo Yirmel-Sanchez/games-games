@@ -6,6 +6,8 @@ public class Board {
 	
 	private byte [][][] digits;
 	
+	private boolean boardEmpty;
+	
 	public Board() {
 		SecureRandom dado = new SecureRandom();
 		this.digits = new byte[9][9][2];
@@ -14,7 +16,12 @@ public class Board {
 				this.digits[i][j][0] = (byte) dado.nextInt(1,10);
 				this.digits[i][j][1] = (byte) 1;
 			}
-		}		
+		}
+		this.boardEmpty = false;
+	}
+
+	public void setDigits(byte[][][] digits) {
+		this.digits = digits;
 	}
 
 	public Board copy() {
@@ -37,4 +44,18 @@ public class Board {
 	    }
 	    return result.substring(0, result.length()-1);
 	}
+	
+	public byte [][][] getDigits(){
+		return digits;
+	}
+
+	public boolean isBoardEmpty() {
+		return boardEmpty;
+	}
+
+	public void setBoardEmpty(boolean boardEmpty) {
+		this.boardEmpty = boardEmpty;
+	}
+	
+	
 }
