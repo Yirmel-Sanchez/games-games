@@ -2,10 +2,47 @@ package edu.uclm.esi.gamesgames.domain;
 
 import java.security.SecureRandom;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+@Entity
+@Table(name = "boards")
 public class Board {
-	
+	@Id @Column(length=80)
+	private String id;
+	@Column(length=80)
+	private String parent;
+	@Column(length=323)
+	private String board_values;
+	@Transient
 	private byte [][][] digits;
-	
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getParent() {
+		return parent;
+	}
+
+	public void setParent(String parent) {
+		this.parent = parent;
+	}
+
+	public String getBoard_values() {
+		return board_values;
+	}
+
+	public void setBoard_values(String board_values) {
+		this.board_values = board_values;
+	}
+
+	@Transient
 	private boolean boardEmpty;
 	
 	public Board() {
@@ -57,5 +94,10 @@ public class Board {
 		this.boardEmpty = boardEmpty;
 	}
 	
+	public void setParentMove(String idParent, String id){
+		this.id = id;
+		this.board_values = toString();
+		this.parent = idParent;
+	}
 	
 }

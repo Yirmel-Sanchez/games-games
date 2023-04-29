@@ -87,7 +87,7 @@ public class WSGames extends TextWebSocketHandler {
 			String winner = match.nameOther(nameUser);
 			Manager.get().finishMatch(matchId, winner); //terminar la partida
 		}else { //hay movimientos posibles
-			match.notifyMove();
+			match.notifyMove(nameUser);
 		}
 		System.out.println("add number to user: "+nameUser);
 		
@@ -130,9 +130,8 @@ public class WSGames extends TextWebSocketHandler {
 		if(Manager.get().getGamesService().emptyBoard(match, userId)) {//tablero vacio
 			Manager.get().finishMatch(matchId, userId); //terminar la partida
 		}else {//tablero con numeros
-			match.notifyMove();
+			match.notifyMove(userId);
 		}
-		//match.notifyMove();
 		System.out.println("user: "+userId+", move: "+ move);
 
 	}

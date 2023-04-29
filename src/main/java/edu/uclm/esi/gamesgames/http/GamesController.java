@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import edu.uclm.esi.gamesgames.domain.Board;
 import edu.uclm.esi.gamesgames.domain.Match;
 import edu.uclm.esi.gamesgames.services.GamesService;
 
@@ -86,6 +87,51 @@ public class GamesController {
 		}
 
 		return match;
+	}
+	
+	@GetMapping("/requestGameAlone")
+	public ResponseEntity<String> requestGameAlone(@RequestParam String userName) {
+		if (userName.equals(""))
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "Nombre de usuario inválido");
+
+		String board = "";
+		try {
+			board = this.gamesService.requestGameAlone(userName);
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al asignar la partida");
+		}
+
+		JSONObject responseBody = new JSONObject();
+	    responseBody.put("board", board);
+	    return ResponseEntity.ok(responseBody.toString());
+	}
+	
+	@GetMapping("/moveAlone")
+	public ResponseEntity<String> moveeAlone(@RequestParam String move, @RequestParam String userName) {
+		String board = "";
+		try {
+			board = this.gamesService.moveAlone(move, userName);
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al realizar el movimiento");
+		}
+
+		JSONObject responseBody = new JSONObject();
+	    responseBody.put("board", board);
+	    return ResponseEntity.ok(responseBody.toString());
+	}
+	
+	@GetMapping("/addNumbersAlone")
+	public ResponseEntity<String> addNumbersAlone(@RequestParam String userName) {
+		String board = "";
+		try {
+			board = this.gamesService.addNumbersAlone(userName);
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al añadir números");
+		}
+
+		JSONObject responseBody = new JSONObject();
+	    responseBody.put("board", board);
+	    return ResponseEntity.ok(responseBody.toString());
 	}
 
 	@PostMapping("/leaveGame")

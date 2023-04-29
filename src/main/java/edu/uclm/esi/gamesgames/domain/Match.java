@@ -106,7 +106,7 @@ public class Match {
 		}
 	}
 	
-	public void notifyMove() {
+	public void notifyMove(String playerWithBoard) {
 		for (String player : players) {
 			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
 			JSONObject jso = new JSONObject().put("type", "UPDATE BOARDS");
@@ -124,6 +124,9 @@ public class Match {
 				e.printStackTrace();
 			}
 		}
+		
+		Manager.get().NewMove(playerWithBoard, boards.get(playerWithBoard));
+		
 	}
 
 	public void removePlayer(String player) {

@@ -2,6 +2,7 @@ package edu.uclm.esi.gamesgames.services;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
 
@@ -14,9 +15,12 @@ import edu.uclm.esi.gamesgames.ws.Manager;
 public class GamesService {
 
 	private WaitingRoom waitingRoom;
+	private ConcurrentHashMap<String, Board> matchesAlone;
+	
 
 	public GamesService() {
 		this.waitingRoom = new WaitingRoom();
+		this.matchesAlone = new ConcurrentHashMap<>();
 	}
 
 	public Match requestGame(String juego, String player) throws Exception {
@@ -48,14 +52,16 @@ public class GamesService {
 			userBoard = match.getBoards().get(1);
 			posBoard = 1;
 		}
+		System.out.println("board original "+userId+": "+userBoard);
 		boolean validMove = checkMove(userBoard, move);// validar el movimiento
 		if (validMove) {
 			Board nuevoBoard = move(userBoard, move);
 			// System.out.println(nuevoBoard);
 			// aqui deberia estar la logica para relacionar el tablero previo y el nuevo y
-			// almacenar el movimiento
+			//Manager.get().setNewMove(match, userId, nuevoBoard);
 			match.setBoard(userId, nuevoBoard);
-			// System.out.println(match.getBoards().get(posBoard));
+			// almacenar el movimiento
+			System.out.println("board actualizado "+userId+": "+match.getBoards().get(posBoard));
 		}
 
 	}
@@ -204,12 +210,12 @@ public class GamesService {
 		
 		addNumbersToBoard(userBoard);
 		System.out.println(userBoard);
+		//Manager.get().setAddMove(match, nameUser, userBoard);
 		match.setBoard(nameUser, userBoard);
-
 	}
 
 	private void addNumbersToBoard(Board userBoard) {
-		int lastPos=80;
+		int lastPos=90;
 		byte[][][] tablero = userBoard.getDigits();
 		ArrayList<Byte> numsToAdd = new ArrayList<>();
 		for(int i=0; i<81;i++) {//ver que numeros hay que añadir y guardar la ultima posicion de estos
@@ -238,18 +244,7 @@ public class GamesService {
 			posBoard = 1;
 		}
 		
-		for(int i=0; i<81;i++) {//posibles combinaciones de movimientos
-			for(int j=0; j<81;j++) {
-				int x1 = (int) i / 9;
-				int y1 = i % 9;
-				int x2 = (int) j / 9;
-				int y2 = j % 9;
-				
-				if(checkMove(userBoard,""+x1+","+y1+","+x2+","+y2))
-					return false;//hay un movimiento disponible
-			}
-		}
-		return true;//hay un bloqueo en el tablero
+		return checkBlock(userBoard);//hay un bloqueo en el tablero
 	}
 
 	public boolean emptyBoard(Match match, String userId) {
@@ -263,4 +258,55 @@ public class GamesService {
 		return false;
 	}
 
+	public String requestGameAlone(String userName) {
+		Board board = new Board();
+		matchesAlone.put(userName, board);
+		return board.toString();
+	}
+
+	public String moveAlone(String move, String userName) throws Exception {
+		if(!matchesAlone.containsKey(userName))
+			throw new Exception();
+		
+		Board userBoard = matchesAlone.get(userName);
+		Board newBoard = null;
+		if(checkMove(userBoard, move)) { //se puede realizar el movimiento
+			newBoard = move(userBoard, move);
+			matchesAlone.put(userName, newBoard);
+			return newBoard.toString();
+		}else {//no se puede realizar el movimiento
+			return userBoard.toString();
+		}
+	}
+
+	public String addNumbersAlone(String userName) throws Exception {
+		if(!matchesAlone.containsKey(userName))
+			throw new Exception();
+		
+		Board userBoard = matchesAlone.get(userName);
+		
+		addNumbersToBoard(userBoard);
+		if(checkBlock(userBoard)) {
+			Board newBoard = new Board();
+			matchesAlone.put(userName, newBoard);
+			return newBoard.toString();
+		}
+
+		return userBoard.toString();
+	}
+
+	public boolean checkBlock(Board userBoard){
+		for(int i=0; i<81;i++) {//posibles combinaciones de movimientos
+			for(int j=0; j<81;j++) {
+				int x1 = (int) i / 9;
+				int y1 = i % 9;
+				int x2 = (int) j / 9;
+				int y2 = j % 9;
+				
+				if(checkMove(userBoard,""+x1+","+y1+","+x2+","+y2))
+					return false;//hay un movimiento disponible
+			}
+		}
+		return true;//hay un bloqueo en el tablero
+	}
 }
