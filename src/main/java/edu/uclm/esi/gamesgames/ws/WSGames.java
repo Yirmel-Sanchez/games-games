@@ -64,7 +64,6 @@ public class WSGames extends TextWebSocketHandler {
 		} else if (type.equals("BROADCAST")) {
 			this.broadcast(jso);
 		} else if (type.equals("PLAYER READY")) {
-			//System.out.println("Player Ready:"+jso.getString("userId")); //*****************************************
 			this.playerReady(jso);
 		} else if (type.equals("LEAVE GAME")) {
 			this.leaveGame(jso); 
@@ -90,7 +89,6 @@ public class WSGames extends TextWebSocketHandler {
 			match.notifyMove(nameUser);
 		}
 		System.out.println("add number to user: "+nameUser);
-		
 	}
 
 	private void leaveGame(JSONObject jso) {
@@ -98,7 +96,8 @@ public class WSGames extends TextWebSocketHandler {
 		String matchId = jso.getString("matchId");
 		Match match = Manager.get().getMatch(matchId);
 		String winner = match.nameOther(userId);
-		Manager.get().finishMatch(matchId, winner);
+		Manager.get().leaveMatch(matchId, winner);
+		
 	}
 
 	private void send(WebSocketSession session, String... tv) {
@@ -116,7 +115,6 @@ public class WSGames extends TextWebSocketHandler {
 
 	private void chat(JSONObject jso) {
 		// TODO Auto-generated method stub
-
 	}
 
 	private void move(JSONObject jso) {
@@ -160,6 +158,7 @@ public class WSGames extends TextWebSocketHandler {
 		if (match != null && !match.isStarted()) {
 			match.setStarted();
 			match.notifyStart();
+			Manager.get().saveMatch(match, "");
 		}
 	}
 
@@ -175,6 +174,7 @@ public class WSGames extends TextWebSocketHandler {
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+		//Manager.get().closeSesion(session.getId());
 		this.sessions.remove(session);
 		JSONObject jso = new JSONObject();
 		jso.put("type", "BYE");

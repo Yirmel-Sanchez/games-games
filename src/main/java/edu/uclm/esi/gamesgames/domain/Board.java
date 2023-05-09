@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+
 @Entity
 @Table(name = "boards")
 public class Board {
@@ -18,6 +19,23 @@ public class Board {
 	private String board_values;
 	@Transient
 	private byte [][][] digits;
+	@Transient
+	private boolean boardEmpty;
+	
+	
+	public Board() {
+		SecureRandom dado = new SecureRandom();
+		this.digits = new byte[9][9][2];
+		for (int i = 0; i<3; i++) {
+			for(int j = 0; j<9; j++) {
+				this.digits[i][j][0] = (byte) dado.nextInt(1,10);
+				this.digits[i][j][1] = (byte) 1;
+			}
+		}
+		this.boardEmpty = false;
+	}
+
+	
 	public String getId() {
 		return id;
 	}
@@ -41,22 +59,7 @@ public class Board {
 	public void setBoard_values(String board_values) {
 		this.board_values = board_values;
 	}
-
-	@Transient
-	private boolean boardEmpty;
 	
-	public Board() {
-		SecureRandom dado = new SecureRandom();
-		this.digits = new byte[9][9][2];
-		for (int i = 0; i<3; i++) {
-			for(int j = 0; j<9; j++) {
-				this.digits[i][j][0] = (byte) dado.nextInt(1,10);
-				this.digits[i][j][1] = (byte) 1;
-			}
-		}
-		this.boardEmpty = false;
-	}
-
 	public void setDigits(byte[][][] digits) {
 		this.digits = digits;
 	}
@@ -70,16 +73,6 @@ public class Board {
 			}
 		}
 		return result;
-	}
-	
-	public String toString() {
-	    String result = "";
-	    for (int i = 0; i < 9; i++) {
-	    	for (int j = 0; j < 9; j++) {
-	            result += digits[i][j][0] + "," + digits[i][j][1] + ",";
-	        }
-	    }
-	    return result.substring(0, result.length()-1);
 	}
 	
 	public byte [][][] getDigits(){
@@ -100,4 +93,13 @@ public class Board {
 		this.parent = idParent;
 	}
 	
+	public String toString() {
+	    String result = "";
+	    for (int i = 0; i < 9; i++) {
+	    	for (int j = 0; j < 9; j++) {
+	            result += digits[i][j][0] + "," + digits[i][j][1] + ",";
+	        }
+	    }
+	    return result.substring(0, result.length()-1);
+	}
 }

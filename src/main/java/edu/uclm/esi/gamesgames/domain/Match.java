@@ -12,19 +12,42 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import edu.uclm.esi.gamesgames.ws.Manager;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
+@Entity
+@Table(name = "matchs")
 public class Match {
-
-	private String id; // almacenar en la bd
+	// almacenar en la bd
+	@Id @Column(length=36)
+	private String id; 
+	@Column(length=100)
+	private String player1;
+	@Column(length=100)
+	private String player2;
+	@Column(length=100)
+	private String winner;
+	@Column(length=80)
+	private String idBoard1;
+	@Column(length=80)
+	private String idBoard2;
+	
+	@Transient
 	private boolean ready;
+	@Transient
 	private boolean started;
-	private List<String> players; // almacenar en la bd
-	private HashMap<String, Board> boards; // almacenar en la bd
+	@Transient
+	private HashMap<String, Board> boards;
 
 	public Match() {
 		this.id = UUID.randomUUID().toString();
-		this.players = new ArrayList<String>();
 		this.boards = new HashMap<>();
+		this.player1 = "";
+		this.player2 = "";
+		this.winner = "";
 	}
 
 	public String getId() {
@@ -42,26 +65,35 @@ public class Match {
 
 	private void buildBoard() {
 		Board board = new Board();
-		this.boards.put(this.players.get(0), board);
-		this.boards.put(this.players.get(1), board.copy());
+		this.boards.put(this.player1, board);
+		this.boards.put(this.player2, board.copy());
 
 	}
 
 	public void addPlayer(String player) {
-		this.players.add(player);
-		if (this.players.size() == 2)
+		if(player1.equals("")) {
+			player1 = player;
+		} else if(player2.equals("")) {
+			player2 = player;
+		}
+		
+		if (!player1.equals("") && !player2.equals(""))
 			this.setReady(true);
 	}
 
 	public List<String> getPlayer() {
-		return this.players;
+		List<String> listPlayers = new ArrayList<String>();
+		if (!player1.equals(""))
+			listPlayers.add(player1);
+		if (!player2.equals(""))
+			listPlayers.add(player2);
+		return listPlayers;
 	}
 
 	public List<Board> getBoards() {
 		List<Board> list = new ArrayList<>();
-		for (Map.Entry<String, Board> entry : this.boards.entrySet()) {
-			list.add(entry.getValue());
-		}
+		list.add(this.boards.get(player1));
+		list.add(this.boards.get(player2));
 		return list;
 	}
 
@@ -74,75 +106,106 @@ public class Match {
 	}
 
 	public void notifyStart() {
-		for (String player : players) {
-			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
-			JSONObject jso = new JSONObject().put("type", "MATCH STARTED").put("matchId", this.id);
-			
-			JSONObject json = new JSONObject();
-	        for (String key : boards.keySet()) {
-	            json.put(key, boards.get(key));
-	        }
-			jso.put("boards", json);
+		//notificar al jugador 1
+		notifyWithBoard("MATCH STARTED", "matchId", this.id, player1);
+		
+		//notificar al jugador 2
+		notifyWithBoard("MATCH STARTED", "matchId", this.id, player2);
+	}
+	
+	private void notifyWithBoard(String typeMessage, String keyMessage, String value, String player) {
+		WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
+		JSONObject jso = new JSONObject().put("type", typeMessage).put(keyMessage, value);
+		
+		JSONObject json = new JSONObject();
+        for (String key : boards.keySet()) {
+            json.put(key, boards.get(key));
+        }
+		jso.put("boards", json);
 
-			TextMessage message = new TextMessage(jso.toString());
-			try {
-				wsSession.sendMessage(message);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		TextMessage message = new TextMessage(jso.toString());
+		try {
+			wsSession.sendMessage(message);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
 	public void notifyWinner(String winner) {
-		for (String player : players) {
-			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
-			JSONObject jso = new JSONObject().put("type", "MATCH FINISHED").put("winner", winner);
-			TextMessage message = new TextMessage(jso.toString());
-			try {
-				wsSession.sendMessage(message);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		//notificar jugador1
+		notifyWithBoard("MATCH FINISHED", "winner", winner, player1);
+		
+		//notificar jugador2
+		notifyWithBoard("MATCH FINISHED", "winner", winner, player2);
+		
+		this.winner = winner;
 	}
 	
 	public void notifyMove(String playerWithBoard) {
-		for (String player : players) {
-			WebSocketSession wsSession = Manager.get().getSessionByUserId(player);
-			JSONObject jso = new JSONObject().put("type", "UPDATE BOARDS");
-			
-			JSONObject json = new JSONObject();
-	        for (String key : boards.keySet()) {
-	            json.put(key, boards.get(key));
-	        }
-			jso.put("boards", json);
-			
-			TextMessage message = new TextMessage(jso.toString());
-			try {
-				wsSession.sendMessage(message);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		//notificar al jugador 1
+		notifyWithBoard("UPDATE BOARDS", "matchId", this.id, player1);
+		
+		//notificar al jugador 2
+		notifyWithBoard("UPDATE BOARDS", "matchId", this.id, player2);
 		
 		Manager.get().NewMove(playerWithBoard, boards.get(playerWithBoard));
 		
 	}
 
 	public void removePlayer(String player) {
-		this.players.remove(player);
+		if(player1.equals(player)) {
+			player1 = "";
+		}else if(player2.equals(player)) {
+			player2 = "";
+		}
 	}
 
 	public String nameOther(String player) {
-		if (players.get(0).equals(player)) {
-			return players.get(1);
+		if (player1.equals(player)) {
+			return player2;
 		} else {
-			return players.get(0);
+			return player1;
 		}
 	}
 	
 	public void setBoard(String player, Board board) {
 		boards.put(player, board);
 	}
+	
+	public void setIdBoards() {
+		for (Map.Entry<String, Board> entry : this.boards.entrySet()) {
+			if(entry.getKey().equals(player1)) {
+				idBoard1 = entry.getValue().getId();
+			} else if(entry.getKey().equals(player2)) {
+				idBoard2 = entry.getValue().getId();
+			}
+		}
+	}
+
+	public void setWinner(String winner) {
+		this.winner = winner;
+	}
+	
+	public String getWinner() {
+		return this.winner;
+	}
+
+	public String getIdBoard1() {
+		return idBoard1;
+	}
+
+	public void setIdBoard1(String idBoard1) {
+		this.idBoard1 = idBoard1;
+	}
+
+	public String getIdBoard2() {
+		return idBoard2;
+	}
+
+	public void setIdBoard2(String idBoard2) {
+		this.idBoard2 = idBoard2;
+	}
+	
+	
 
 }

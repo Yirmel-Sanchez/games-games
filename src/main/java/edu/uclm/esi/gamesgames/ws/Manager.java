@@ -3,9 +3,11 @@ package edu.uclm.esi.gamesgames.ws;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 
 import edu.uclm.esi.gamesgames.dao.BoardDAO;
+import edu.uclm.esi.gamesgames.dao.MatchDAO;
 import edu.uclm.esi.gamesgames.domain.Board;
 import edu.uclm.esi.gamesgames.domain.Match;
 import edu.uclm.esi.gamesgames.services.GamesService;
@@ -22,6 +24,8 @@ public class Manager {
 	private GamesService gamesService;
 	@Autowired
 	private BoardDAO boardDAO;
+	@Autowired
+	private MatchDAO matchDAO;
 	
 	private ConcurrentHashMap<String, WebSocketSession> sessionsByUserId;
 	private ConcurrentHashMap<String, WebSocketSession> sessionsByWsId;
@@ -69,7 +73,7 @@ public class Manager {
 	}
 	
 	public WebSocketSession getSessionByUserId(String userId) {
-		System.out.println("user: "+userId+"wsId: "+this.sessionsByUserId.get(userId));
+		//System.out.println("user: "+userId+"wsId: "+this.sessionsByUserId.get(userId));
 		return this.sessionsByUserId.get(userId);
 	}
 	
@@ -114,6 +118,7 @@ public class Manager {
 		
 		boardDAO.save(b0);
 		boardDAO.save(b1);
+		//guardar match inicial
 	}
 
 	public Match getMatch(String matchId) {
@@ -139,7 +144,6 @@ public class Manager {
 		Match match = removeMatch(idMatch);
 		match.notifyWinner(winner);
 		removerPlayersInMatch(match);
-		//guardarDBMatch(result);
 		
 		//save x-1
 		Board prev =  boards.get(winner);
@@ -156,50 +160,28 @@ public class Manager {
 		prev.setParentMove(idPrev, idPrev.substring(0, lastPos)+(numMove+1));
 		prev.setBoard_values(boardEmpty);
 		boardDAO.save(prev);//guardar paso x-1
-		System.out.println("x:"+prev.getId());		
+		System.out.println("x:"+prev.getId());
+		
+		match.setIdBoards();
+		if(winner.equals(match.getPlayer().get(0))) {
+			match.setIdBoard1(prev.getId());
+		}else {
+			match.setIdBoard2(prev.getId());
+		}
+		saveMatch(match, winner);
 	}
 
 	private void removerPlayersInMatch(Match match) {
 		for(String player: match.getPlayer()) {
 			this.playersInMatch.remove(player);
+			try {
+				removeSessionByUserId(player).close(CloseStatus.NORMAL);
+			}catch(IOException ioe) {
+				ioe.printStackTrace();
+			}
 		}
 	}
-	/*
-	public void setNewMove(Match match, String userId, Board nuevoBoard) {
-		//actualizar el tablero guardado (id, parent, board_values)
-		int pos = (match.getPlayer().get(0).equals(userId))? 0 : 1;
-		Board boardPrevio = boards.get(userId);
-		String idPrevio= boardPrevio.getId();
-		int lastPos = idPrevio.lastIndexOf('-')+1;
-		int numMove = Integer.parseInt(idPrevio.substring(lastPos, idPrevio.length()));
-		System.out.println("lastPos: "+lastPos+", numMove: "+numMove);
-		String newId = idPrevio.substring(0, lastPos)+(numMove+1);
-		System.out.println("newId: "+newId);
-		 
-		nuevoBoard.setParentMove(idPrevio, newId);//relacionar nuevo board con el antiguo
-		//guardar en la base de datos el board antiguo
-		System.out.println("boardPrevio null:"+(boardPrevio == null));
-		boardDAO.save(boardPrevio);
-		//reemplazar el antiguo por le nuevo
-		this.boards.put(userId, nuevoBoard);
-		match.setBoard(userId, nuevoBoard);
-		
-	}
-
-	public void setAddMove(Match match, String nameUser, Board userBoard) {
-		Board boardPrevio = boards.get(nameUser);
-		String idPrevio= boardPrevio.getId();
-		int lastPos = idPrevio.lastIndexOf('-')+1;
-		int numMove = Integer.parseInt(idPrevio.substring(lastPos, idPrevio.length()));
-		System.out.println("idprevio: "+idPrevio+"lastPos: "+lastPos+", numMove: "+numMove);
-		String newId = idPrevio.substring(0, lastPos)+(numMove+1);
-		System.out.println("newId: "+newId);
-		boardDAO.save(boardPrevio);// guardar el movimiento actual
-		userBoard.setParentMove(boardPrevio.getId(), newId);//asignar atributos al nuevo Board
-		//asignar el nuevo board a los boards
-		boards.put(nameUser, userBoard);
-	}
-	*/
+	
 	public void NewMove(String player, Board boardNuevo) {
 		Board boardPrevio = boards.get(player);
 		String idPrevio= boardPrevio.getId();
@@ -213,4 +195,42 @@ public class Manager {
 		boards.put(player, boardNuevo);//asignar el nuevo board a los boards
 	}
 
+	public void saveMatch(Match match, String winner) {
+		match.setIdBoards();
+		match.setWinner(winner);
+		System.out.println(match.toString());
+		matchDAO.save(match);
+	}
+
+	public void leaveMatch(String idMatch, String winner) {
+		Match match = removeMatch(idMatch);
+		match.notifyWinner(winner);
+		removerPlayersInMatch(match);
+		match.setIdBoards();
+		for(Board board : match.getBoards()) {
+			boardDAO.save(board);
+		}
+		
+		saveMatch(match, winner);
+	}
+	
+	public void closeMatch(String player) {
+		//match
+		String matchID="";
+		String winner="";
+		for (String idMatch : matches.keySet()) {
+	        Match match = matches.get(idMatch);
+	        if(match.getPlayer().get(0).equals(player)) {
+	        	matchID = idMatch;
+	        	winner = match.getPlayer().get(1);
+	        }else if(match.getPlayer().get(1).equals(player)) {
+	        	matchID = idMatch;
+	        	winner = match.getPlayer().get(0);
+	        }
+	    }
+		
+		if(!matchID.equals("")) {
+			leaveMatch(matchID, winner);
+		}
+	}
 }

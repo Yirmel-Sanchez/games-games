@@ -26,7 +26,7 @@ public class GamesService {
 	public Match requestGame(String juego, String player) throws Exception {
 		System.out.println(player + ":" + Manager.get().isPlayerInMatch(player));// **************************************
 		if (Manager.get().isPlayerInMatch(player)) // Jugador ya en espera
-			throw new Exception();
+			Manager.get().closeMatch(player);
 
 		Manager.get().addPlayerInMatch(player);
 		Match match = this.waitingRoom.findMatch(juego, player);
@@ -54,11 +54,13 @@ public class GamesService {
 		}
 		System.out.println("board original "+userId+": "+userBoard);
 		boolean validMove = checkMove(userBoard, move);// validar el movimiento
+		System.out.println("Valid move: "+validMove);
 		if (validMove) {
 			Board nuevoBoard = move(userBoard, move);
 			// System.out.println(nuevoBoard);
 			// aqui deberia estar la logica para relacionar el tablero previo y el nuevo y
 			//Manager.get().setNewMove(match, userId, nuevoBoard);
+			
 			match.setBoard(userId, nuevoBoard);
 			// almacenar el movimiento
 			System.out.println("board actualizado "+userId+": "+match.getBoards().get(posBoard));
@@ -193,6 +195,7 @@ public class GamesService {
 		}
 
 		boardCopy.setDigits(grid2);// asignar el nuevo tablero
+		System.out.println("tablero modificado en move:" + boardCopy);
 		return boardCopy;
 	}
 
