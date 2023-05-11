@@ -57,9 +57,6 @@ public class GamesService {
 		System.out.println("Valid move: "+validMove);
 		if (validMove) {
 			Board nuevoBoard = move(userBoard, move);
-			// System.out.println(nuevoBoard);
-			// aqui deberia estar la logica para relacionar el tablero previo y el nuevo y
-			//Manager.get().setNewMove(match, userId, nuevoBoard);
 			
 			match.setBoard(userId, nuevoBoard);
 			// almacenar el movimiento
@@ -68,7 +65,7 @@ public class GamesService {
 
 	}
 
-	private boolean checkMove(Board boardOriginal, String move) {
+	public boolean checkMove(Board boardOriginal, String move) {
 		int x1, y1, x2, y2;
 		try {
 			String[] positions = move.split(",");

@@ -102,4 +102,6 @@ public class Board {
 	    }
 	    return result.substring(0, result.length()-1);
 	}
+	
+	
 }

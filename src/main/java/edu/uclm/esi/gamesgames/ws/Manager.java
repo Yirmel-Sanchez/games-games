@@ -91,15 +91,6 @@ public class Manager {
 		return this.sessionsByWsId.get(wsId);
 	}
 
-	/*public void invalidate(HWSession existingSession) {
-		existingSession.getHttpSession().invalidate();
-		try {
-			existingSession.getWebsocketSession().close();
-		} catch (IOException e) {
-		}
-		this.removeSessionByHttpId(existingSession.getHttpSession().getId());
-	}*/
-
 	public void addMatch(Match match) {
 		this.matches.put(match.getId(), match);
 		
