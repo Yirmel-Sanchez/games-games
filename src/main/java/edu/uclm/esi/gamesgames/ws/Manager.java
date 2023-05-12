@@ -90,7 +90,13 @@ public class Manager {
 	public WebSocketSession getSessionByWsId(String wsId) {
 		return this.sessionsByWsId.get(wsId);
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: addMatch
+	* - Descripción del método: Este método añade un nuevo objeto de tipo Match al mapa de partidas (matches). Además, establece las relaciones entre el objeto Match y sus tableros correspondientes, actualiza el historial de tableros y los guarda en la base de datos.
+	*
+	*********************************************************************/
 	public void addMatch(Match match) {
 		this.matches.put(match.getId(), match);
 		
@@ -111,15 +117,37 @@ public class Manager {
 		boardDAO.save(b1);
 		//guardar match inicial
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: getMatch
+	* - Descripción del método: Este método recibe un String que es el id de una partida, busca la partida correspondiente en 
+	* el mapa de partidas (matches) y devuelve el objeto Match correspondiente.
+	* 
+	*********************************************************************/
 	public Match getMatch(String matchId) {
 		return this.matches.get(matchId);
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: removeMatch
+	* - Descripción del método: Este método recibe un String que es el id de una partida, busca la partida correspondiente en 
+	* el mapa de partidas (matches), la elimina del mapa y devuelve el objeto Match correspondiente.
+	* 
+	*********************************************************************/
 	public Match removeMatch(String matchId) {
 		return this.matches.remove(matchId);
 	}
 	
+	/*********************************************************************
+	*
+	* - Nombre del método: finishMatch
+	* - Descripción del método: Este método recibe el id de una partida y el id del jugador ganador de la misma. A continuación,
+	* elimina el objeto Match correspondiente, establece el tablero del ganador como "padre" del último movimiento y lo guarda 
+	* en la base de datos, y finalmente actualiza el objeto Match y lo guarda en la base de datos.
+	* 
+	*********************************************************************/
 	public void finishMatch(String idMatch, String winner) {
 		String boardEmpty = 
 				"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"+
@@ -161,7 +189,15 @@ public class Manager {
 		}
 		saveMatch(match, winner);
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: removerPlayersInMatch
+	* - Descripción del método: Este método recibe un objeto Match y elimina a los jugadores que participaron en ella de la 
+	* lista de jugadores en partida (playersInMatch), cierra las sesiones de WebSocket correspondientes a dichos jugadores y
+	* elimina dichas sesiones de la lista de sesiones activas (sessions).
+	* 
+	*********************************************************************/
 	private void removerPlayersInMatch(Match match) {
 		for(String player: match.getPlayer()) {
 			this.playersInMatch.remove(player);
@@ -173,6 +209,15 @@ public class Manager {
 		}
 	}
 	
+	/*********************************************************************
+	*
+	* - Nombre del método: NewMove
+	* - Descripción del método: Este método recibe como parámetros el nombre del jugador y un objeto Board. A partir del nombre
+	*  del jugador, recupera el board previo del mismo, obtiene su último movimiento, genera un nuevo id para el board nuevo a 
+	*  partir del último movimiento incrementado en 1 y asigna los atributos correspondientes al nuevo board. Luego guarda el 
+	*  board previo actualizado, asigna el nuevo board a los boards y lo guarda.
+	*  
+	*********************************************************************/
 	public void NewMove(String player, Board boardNuevo) {
 		Board boardPrevio = boards.get(player);
 		String idPrevio= boardPrevio.getId();
@@ -186,6 +231,13 @@ public class Manager {
 		boards.put(player, boardNuevo);//asignar el nuevo board a los boards
 	}
 
+	/*********************************************************************
+	*
+	* - Nombre del método: saveMatch
+	* - Descripción del método: Este método recibe como parámetros un objeto Match y un String con el nombre del ganador. 
+	* Asigna un id a los boards del match, establece el ganador y guarda el match.
+	* 
+	*********************************************************************/
 	public void saveMatch(Match match, String winner) {
 		match.setIdBoards();
 		match.setWinner(winner);
@@ -193,6 +245,14 @@ public class Manager {
 		matchDAO.save(match);
 	}
 
+	/*********************************************************************
+	*
+	* - Nombre del método: leaveMatch
+	* - Descripción del método: Este método recibe como parámetros un String con el id del match y un String con el nombre 
+	* del ganador. Remueve el match del mapa de matches, notifica al ganador, remueve los jugadores del match, establece un 
+	* nuevo id a los boards del match y los guarda.
+	* 
+	*********************************************************************/
 	public void leaveMatch(String idMatch, String winner) {
 		Match match = removeMatch(idMatch);
 		match.notifyWinner(winner);
@@ -205,6 +265,13 @@ public class Manager {
 		saveMatch(match, winner);
 	}
 	
+	/*********************************************************************
+	*
+	* - Nombre del método: closeMatch
+	* - Descripción del método: Este método recibe como parámetro un String con el nombre del jugador. Busca el match en 
+	* el que participa el jugador y obtiene su id y el nombre del ganador. Si encuentra un match, llama al método leaveMatch
+	* con el id del match y el nombre del ganador.
+	*********************************************************************/
 	public void closeMatch(String player) {
 		//match
 		String matchID="";

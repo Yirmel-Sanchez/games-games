@@ -33,7 +33,16 @@ public class GamesController {
 
 	@Autowired
 	private GamesService gamesService;
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: requestGame
+	* - Descripción del método: Este método se encarga de procesar la solicitud de un juego. Toma dos parámetros de solicitud, 
+	* el nombre del juego y el identificador del jugador, y los utiliza para comprobar el saldo del jugador y solicitar un juego.
+	* Si el saldo del jugador es suficiente, el método llama al servicio de juegos para solicitar un juego y también realiza 
+	* una solicitud HTTP POST para restar el saldo del jugador. Devuelve un objeto Match que representa el juego solicitado.
+	*
+	*********************************************************************/
 	@GetMapping("/requestGame")
 	public Match requestGame(@RequestParam String juego, @RequestParam String idPlayer) {
 		if (!juego.equals("nm"))
@@ -89,6 +98,15 @@ public class GamesController {
 		return match;
 	}
 	
+	/*********************************************************************
+	*
+	* - Nombre del método: requestGameAlone
+	* - Descripción del método: Este método se encarga de solicitar una partida en solitario al servidor del juego.
+	* Recibe como parámetro el nombre de usuario y verifica que no esté vacío. Luego, llama al método requestGameAlone
+	* del servicio de juegos para obtener el tablero de juego y lo devuelve como una respuesta HTTP con formato JSON.
+	* Si se produce algún error, se devuelve una excepción HTTP con un código de estado correspondiente.
+	* 
+	*********************************************************************/
 	@GetMapping("/requestGameAlone")
 	public ResponseEntity<String> requestGameAlone(@RequestParam String userName) {
 		if (userName.equals(""))
@@ -106,6 +124,16 @@ public class GamesController {
 	    return ResponseEntity.ok(responseBody.toString());
 	}
 	
+	/*********************************************************************
+	*
+	* - Nombre del método: moveAlone
+	* - Descripción del método: Este método se encarga de realizar un movimiento en una partida en solitario.
+	* Recibe como parámetros el movimiento a realizar y el nombre de usuario del jugador. Luego, llama al método
+	* moveAlone del servicio de juegos para realizar el movimiento y obtener el nuevo estado del tablero de juego.
+	* Finalmente, devuelve el nuevo tablero de juego como una respuesta HTTP con formato JSON. Si se produce algún
+	* error, se devuelve una excepción HTTP con un código de estado correspondiente.
+	* 
+	*********************************************************************/
 	@GetMapping("/moveAlone")
 	public ResponseEntity<String> moveeAlone(@RequestParam String move, @RequestParam String userName) {
 		String board = "";
@@ -120,6 +148,16 @@ public class GamesController {
 	    return ResponseEntity.ok(responseBody.toString());
 	}
 	
+	/*********************************************************************
+	*
+	* - Nombre del método: addNumbersAlone
+	* - Descripción del método: Este método se encarga de añadir números a un juego en solitario.
+	* Recibe como parámetro el nombre de usuario del jugador y llama al método addNumbersAlone del servicio de juegos
+	* para añadir números al juego y obtener el nuevo estado del tablero de juego. Finalmente, devuelve el nuevo tablero
+	* de juego como una respuesta HTTP con formato JSON. Si se produce algún error, se devuelve una excepción HTTP con
+	* un código de estado correspondiente.
+	* 
+	*********************************************************************/
 	@GetMapping("/addNumbersAlone")
 	public ResponseEntity<String> addNumbersAlone(@RequestParam String userName) {
 		String board = "";
@@ -133,7 +171,17 @@ public class GamesController {
 	    responseBody.put("board", board);
 	    return ResponseEntity.ok(responseBody.toString());
 	}
+	
+	/*********************************************************************
+	*
 
+	Method name: leaveGame
+	Description of the Method: Este método permite a un jugador abandonar una partida. Recibe como parámetros el id del jugador
+	y el id de la partida que desea abandonar. Realiza una llamada HTTP GET a un servidor externo para comprobar el nombre
+	de usuario del jugador a partir de su id, luego llama a un servicio interno para que realice la operación de abandono
+	de la partida y, si la operación es exitosa, devuelve una respuesta JSON con un mensaje de éxito.
+	
+	*********************************************************************/
 	@PostMapping("/leaveGame")
 	public ResponseEntity<String> leaveGame(@RequestBody Map<String, Object> requestBody) {
 		String idPlayer = (String) requestBody.get("idPlayer");

@@ -19,6 +19,15 @@ import edu.uclm.esi.gamesgames.services.GamesService;
 public class WSGames extends TextWebSocketHandler {
 	private ArrayList<WebSocketSession> sessions = new ArrayList<>();
 	
+	/*********************************************************************
+	*
+	* Method name: afterConnectionEstablished
+	* Description of the Method: Este método se encarga de establecer una conexión websocket, añade la sesión a la lista de 
+	* sesiones y realiza el procesamiento de los parámetros que se reciben a través de la URI para obtener el id del usuario 
+	* y el id del partido. A continuación, agrega la sesión a la lista de sesiones para el usuario correspondiente y muestra
+	*  un mensaje de conexión establecida
+	* 
+	*********************************************************************/
 	// Cada objeto representa el WS del cliente
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -51,7 +60,15 @@ public class WSGames extends TextWebSocketHandler {
 
 		System.out.println("Conexion ws establecida con " + session.getId());
 	}
-
+	
+	/*********************************************************************
+	*
+	* Method name: handleTextMessage
+	* Description of the Method: Este método se encarga de procesar los mensajes de texto recibidos en la conexión websocket,
+	* identifica el tipo de mensaje a través de un campo "type" en el JSON recibido y ejecuta el método correspondiente a ese
+	* tipo de mensaje.
+	* 
+	*********************************************************************/
 	@Override
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 		String payload = message.getPayload();
@@ -59,8 +76,6 @@ public class WSGames extends TextWebSocketHandler {
 		String type = jso.getString("type");
 		if (type.equals("MOVEMENT")) {
 			this.move(jso);
-		} else if (type.equals("CHAT")) {
-			this.chat(jso);
 		} else if (type.equals("BROADCAST")) {
 			this.broadcast(jso);
 		} else if (type.equals("PLAYER READY")) {
@@ -73,7 +88,16 @@ public class WSGames extends TextWebSocketHandler {
 			this.send(session, "type", "ERROR", "message", "Mensaje no reconocido");
 		}
 	}
-
+	
+	/*********************************************************************
+	*
+	* Method name: addNumbers
+	* Description of the Method: Este método se encarga de procesar el mensaje de tipo "ADD NUMBERS" que se recibe a través de
+	* la conexión websocket. El mensaje contiene el id del partido y el nombre del usuario que está realizando el movimiento.
+	* El método agrega el número a la lista de números del usuario en el partido y verifica si el tablero está bloqueado. 
+	* Si está bloqueado, termina el partido y notifica al ganador. Si no está bloqueado, notifica al siguiente usuario que es su turno.
+	* 
+	*********************************************************************/
 	private void addNumbers(JSONObject jso) {
 		String matchId = jso.getString("matchId");
 		String nameUser = jso.getString("nameUser");
@@ -90,7 +114,15 @@ public class WSGames extends TextWebSocketHandler {
 		}
 		System.out.println("add number to user: "+nameUser);
 	}
-
+	
+	/*********************************************************************
+	*
+	* Method name: leaveGame
+	* Description of the Method: Este método se encarga de procesar el mensaje de tipo "LEAVE GAME" que se recibe a través de 
+	* la conexión websocket. El mensaje contiene el id del partido y el nombre del usuario que está abandonando el partido. 
+	* El método actualiza el estado del partido y notifica al ganador.
+	* 
+	*********************************************************************/
 	private void leaveGame(JSONObject jso) {
 		String userId = jso.getString("nameUser");
 		String matchId = jso.getString("matchId");
@@ -99,7 +131,15 @@ public class WSGames extends TextWebSocketHandler {
 		Manager.get().leaveMatch(matchId, winner);
 		
 	}
-
+	
+	/*********************************************************************
+	*
+	* Method name: send
+	* Description of the Method: Este método se encarga de enviar un mensaje a través de la conexión websocket. El mensaje se construye a partir de
+	* una serie de pares de clave-valor que se pasan como argumentos al método. El mensaje se envía a la sesión correspondiente y si ocurre algún error
+	* al enviar el mensaje, se elimina la sesión de la lista de sesiones.
+	* 
+	*********************************************************************/
 	private void send(WebSocketSession session, String... tv) {
 		JSONObject jso = new JSONObject();
 		for (int i = 0; i < tv.length; i++) {
@@ -112,11 +152,16 @@ public class WSGames extends TextWebSocketHandler {
 			this.sessions.remove(session);
 		}
 	}
-
-	private void chat(JSONObject jso) {
-		// TODO Auto-generated method stub
-	}
-
+	
+	/*********************************************************************
+	*
+	* - Method name: move
+	* - Description of the Method: Este método se encarga de realizar el movimiento de un jugador en una partida determinada, 
+	* verificando primero si es un movimiento válido. Si el tablero queda vacío después del movimiento, se termina la partida, 
+	* de lo contrario se notifica el movimiento al otro jugador.
+	* 
+	*********************************************************************/
+	
 	private void move(JSONObject jso) {
 		String userId = jso.getString("nameUser");
 		String matchId = jso.getString("matchId");
@@ -133,7 +178,12 @@ public class WSGames extends TextWebSocketHandler {
 		System.out.println("user: "+userId+", move: "+ move);
 
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Method name: broadcast
+	* - Description of the Method: Este método se encarga de enviar un mensaje a todos los clientes conectados al servidor.
+	*********************************************************************/
 	private void broadcast(JSONObject jso) {
 		TextMessage message = new TextMessage(jso.getString("message"));
 		for (WebSocketSession client : this.sessions) {
@@ -151,7 +201,15 @@ public class WSGames extends TextWebSocketHandler {
 			new Thread(r).start();
 		}
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Method name: playerReady
+	* - Description of the Method: Este método se encarga de iniciar una partida en el momento en que ambos jugadores están 
+	* listos para jugar. Si ambos jugadores están listos y la partida aún no ha comenzado, se establece el estado de la partida
+	* a "iniciada" y se notifica a ambos jugadores para comenzar.
+	*  
+	*********************************************************************/
 	private void playerReady(JSONObject jso) {
 		String matchId = jso.getString("idMatch");
 		Match match = Manager.get().getMatch(matchId);
@@ -171,7 +229,15 @@ public class WSGames extends TextWebSocketHandler {
 	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
 
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Method name: afterConnectionClosed
+	* - Description of the Method: Este método se llama después de que se haya cerrado una conexión WebSocket y se encarga de
+	*  realizar las tareas necesarias cuando un usuario se desconecta. En concreto, cierra la sesión, elimina la sesión de la
+	*  lista de sesiones y envía un mensaje de despedida a todos los usuarios conectados mediante el método broadcast.
+	*
+	*********************************************************************/
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 		//Manager.get().closeSesion(session.getId());

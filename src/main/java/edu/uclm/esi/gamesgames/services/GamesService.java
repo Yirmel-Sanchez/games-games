@@ -22,7 +22,15 @@ public class GamesService {
 		this.waitingRoom = new WaitingRoom();
 		this.matchesAlone = new ConcurrentHashMap<>();
 	}
-
+	/*********************************************************************
+	*
+	*  - Nombre del método: requestGame
+	*  - Descripción del método: El método requestGame es llamado por un jugador que quiere unirse a una partida en espera o crear una nueva. 
+	* una. Si el jugador ya está en una partida, cierra esa partida y añade al jugador a la lista de espera. A continuación, el método 
+	* busca una partida con el nombre del juego y el nombre del jugador especificados. Si se encuentra una partida, y está lista, el método añade
+	* la partida a la lista de partidas actuales y la devuelve.
+	*
+	*********************************************************************/
 	public Match requestGame(String juego, String player) throws Exception {
 		System.out.println(player + ":" + Manager.get().isPlayerInMatch(player));// **************************************
 		if (Manager.get().isPlayerInMatch(player)) // Jugador ya en espera
@@ -34,13 +42,26 @@ public class GamesService {
 			Manager.get().addMatch(match);
 		return match;
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: leaveGame 
+	* - Descripción del método: El método leaveGame elimina a un jugador de una partida en espera o de una partida en curso.
+	*
+	*********************************************************************/
 	public void leaveGame(String idMatch, String userName) {
 		// Quitar el nombre del usuario de la lista de usuarios en partidas
 		Manager.get().removePlayerInMatch(userName);
 		this.waitingRoom.leaveMatch(idMatch, userName); // quitarlo de la lista de espera
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: 
+	* - Descripción del método: El método isValidMove comprueba si un movimiento es válido para la coincidencia, ID de usuario, 
+	* y jugada. Si el movimiento es válido, actualiza el tablero con el nuevo movimiento.
+	*
+	*********************************************************************/
 	public void isValidMove(Match match, String userId, String move) {
 		// obtener tablero del usuario
 		Board userBoard; // obtener el board del usuario
@@ -64,7 +85,17 @@ public class GamesService {
 		}
 
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: checkMove
+	* - Descripción del método: El método checkMove comprueba si un movimiento es válido basándose en las reglas del juego. 
+	* Devuelve true si la jugada es válida y false en caso contrario. El método comprueba si las posiciones son iguales, 
+	* si ambos dígitos están activos, si los dígitos suman 10 o son iguales, si son vecinos, y si hay un
+	* número intermedio. Si las posiciones son diagonales, el método comprueba si hay números entre ellas y si 
+	* las posiciones son vecinas.
+	*
+	*********************************************************************/
 	public boolean checkMove(Board boardOriginal, String move) {
 		int x1, y1, x2, y2;
 		try {
@@ -138,7 +169,19 @@ public class GamesService {
 			return false; // si hay un error no permite el movimiento
 		}
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: move
+	* - Descripción del método: Este método toma un tablero de juego y un movimiento (representado como 
+	* una cadena) y actualiza el tablero basándose en el movimiento. Se espera que el movimiento sea una cadena con cuatro 
+	* números separados por * comas, que representan las coordenadas x e y de las dos celdas. comas, representando las 
+	* coordenadas x e y de las dos celdas a rellenar. El método crea primero una copia del tablero, luego desactiva las dos
+	* celdas que fueron rellenadas poniendo su valor de segundo byte a 0. Luego comprueba cada fila del tablero para ver 
+	* cuáles siguen siendo válidas (es decir, no contienen números duplicados) y crea una nueva cuadrícula con sólo las filas
+	* válidas. Finalmente, establece la nueva cuadrícula como los dígitos del tablero y devuelve el tablero actualizado.
+	*
+	*********************************************************************/
 	public Board move(Board board, String move) {
 		Board boardCopy = board.copy();
 		String[] positions = move.split(",");
@@ -195,7 +238,16 @@ public class GamesService {
 		System.out.println("tablero modificado en move:" + boardCopy);
 		return boardCopy;
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: addNumber
+	* - Descripción del método: addNumber(Partido partido, String nombreUsuario): Este método añade números al tablero de juego del
+	* usuario especificado en la partida especificada. Primero recupera el tablero del usuario del objeto de la partida, luego llama al método 
+	* addNumbersToBoard para añadir los números necesarios al tablero. Finalmente, actualiza el objeto partido con el 
+	* tablero actualizado.
+	*
+	*********************************************************************/
 	public void addNumber(Match match, String nameUser) {
 		// obtener tablero del usuario
 		Board userBoard; // obtener el board del usuario
@@ -213,7 +265,14 @@ public class GamesService {
 		//Manager.get().setAddMove(match, nameUser, userBoard);
 		match.setBoard(nameUser, userBoard);
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: addNumbersToBoard
+	* - Descripción del método: Este método añade números al tablero. Primero encuentra la última posición ocupada en el tablero
+	* y luego itera a través de las celdas restantes, añadiendo números según sea necesario.
+	*
+	*********************************************************************/
 	private void addNumbersToBoard(Board userBoard) {
 		int lastPos=90;
 		byte[][][] tablero = userBoard.getDigits();
@@ -232,7 +291,16 @@ public class GamesService {
 			}
 		}
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Nombre del método: checkBlock
+	* - Descripción del método: Este método comprueba si el tablero del usuario especificado en la partida especificada 
+	* está bloqueado (es decir, no quedan movimientos válidos). Primero recupera el tablero del usuario del objeto de la 
+	* partida, luego llama al método checkBlock para comprobar si el tablero está bloqueado. Devuelve true si el tablero 
+	* está bloqueado y false en caso contrario.
+	*
+	*********************************************************************/
 	public boolean checkBlock(Match match, String nameUser) {
 		Board userBoard; // obtener el board del usuario
 		int posBoard;
@@ -246,7 +314,12 @@ public class GamesService {
 		
 		return checkBlock(userBoard);//hay un bloqueo en el tablero
 	}
-
+	/*********************************************************************
+	*
+	* - Method name: emptyBoard
+	* - Description of the Method: Devuelve verdadero si el tablero correspondiente al usuario especificado está vacío en una partida dada.
+	*
+	*********************************************************************/
 	public boolean emptyBoard(Match match, String userId) {
 		if (match.getPlayer().get(0).equals(userId)) {
 			if(match.getBoards().get(0).isBoardEmpty()) 
@@ -257,13 +330,27 @@ public class GamesService {
 		}
 		return false;
 	}
-
+	
+	/*********************************************************************
+	*
+	* - Method name: requestGameAlone
+	* - Description of the Method: Crea una partida en solitario para un usuario especificado y devuelve la representación en 
+	* cadena de la placa creada.
+	*
+	*********************************************************************/
 	public String requestGameAlone(String userName) {
 		Board board = new Board();
 		matchesAlone.put(userName, board);
 		return board.toString();
 	}
-
+	/*********************************************************************
+	*
+	*- Method name: moveAlone
+	* - Description of the Method: Realiza un movimiento en la placa correspondiente al usuario especificado en una partida en
+	* solitario dada, y devuelve la representación en cadena de la nueva placa. Si el movimiento no se puede realizar, devuelve
+	* la representación en cadena de la placa actual.
+	*
+	*********************************************************************/
 	public String moveAlone(String move, String userName) throws Exception {
 		if(!matchesAlone.containsKey(userName))
 			throw new Exception();
@@ -278,7 +365,16 @@ public class GamesService {
 			return userBoard.toString();
 		}
 	}
-
+	
+	/*********************************************************************
+	*
+	*- Method name: addNumbersAlone
+	* - Description of the Method: Agrega números aleatorios a la placa correspondiente al usuario especificado en una partida
+	* en solitario dada. Si esto resulta en un bloqueo en el tablero, se crea una nueva placa y se devuelve su representación
+	*  en cadena. Si no hay bloqueo, devuelve la representación en cadena de la placa actual.
+	*
+	*********************************************************************/
+	
 	public String addNumbersAlone(String userName) throws Exception {
 		if(!matchesAlone.containsKey(userName))
 			throw new Exception();
@@ -295,6 +391,13 @@ public class GamesService {
 		return userBoard.toString();
 	}
 
+	/*********************************************************************
+	*
+	*- Method name: checkBlock
+	*- Description of the Method: Verifica si hay un bloqueo en la placa dada, es decir, si no hay más movimientos posibles. 
+	* Si hay un movimiento disponible, devuelve falso, de lo contrario devuelve verdadero.
+	*
+	*********************************************************************/
 	public boolean checkBlock(Board userBoard){
 		for(int i=0; i<81;i++) {//posibles combinaciones de movimientos
 			for(int j=0; j<81;j++) {
