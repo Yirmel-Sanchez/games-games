@@ -174,12 +174,12 @@ public class GamesController {
 	
 	/*********************************************************************
 	*
-
-	Method name: leaveGame
-	Description of the Method: Este método permite a un jugador abandonar una partida. Recibe como parámetros el id del jugador
-	y el id de la partida que desea abandonar. Realiza una llamada HTTP GET a un servidor externo para comprobar el nombre
-	de usuario del jugador a partir de su id, luego llama a un servicio interno para que realice la operación de abandono
-	de la partida y, si la operación es exitosa, devuelve una respuesta JSON con un mensaje de éxito.
+	*
+	* Method name: leaveGame
+	* Description of the Method: Este método permite a un jugador abandonar una partida. Recibe como parámetros el id del jugador
+	* y el id de la partida que desea abandonar. Realiza una llamada HTTP GET a un servidor externo para comprobar el nombre
+	* de usuario del jugador a partir de su id, luego llama a un servicio interno para que realice la operación de abandono
+	* de la partida y, si la operación es exitosa, devuelve una respuesta JSON con un mensaje de éxito.
 	
 	*********************************************************************/
 	@PostMapping("/leaveGame")
